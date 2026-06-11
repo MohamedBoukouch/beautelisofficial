@@ -2,7 +2,7 @@
   'use strict';
 
   // ===== GOOGLE SCRIPT URL =====
-  var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwyzw1-ejmO4LHGyRVIIXXWOBf7gxl7-URidpLKa5kOYKMBI0NlsvK2uWVnUoXjEA_LVg/exec';
+  var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAswf3OLa-_kY905-dYAe6rOYWcR4b16qEpUBoePwX-wLsA94HzPgWel2DJ1hFD2sC/exec';
 
   /* ── PRODUCT SLIDER SWIPE ── */
   (function initProductSlider() {
@@ -170,7 +170,7 @@
     return map[selectedPkg] || map[1];
   }
 
-  /* ── ORDER FORM — VERSION LIEN DIRECT (comme test navigateur) ── */
+  /* ── ORDER FORM ── */
   function initOrderForm() {
     var buyBtn = document.getElementById('buy-btn');
     if (!buyBtn) return;
@@ -218,65 +218,22 @@
       buyBtn.disabled = true;
       buyBtn.textContent = 'جارٍ المعالجة…';
 
-      // 🔥 SOLUTION : Utiliser une balise <img> comme le lien de test navigateur
-      // Ça bypass CORS et marche en local + production
+      // Send as GET with URL params (works with no-cors)
       var params = new URLSearchParams(orderData);
       var url = GOOGLE_SCRIPT_URL + '?' + params.toString();
 
-      console.log('Sending order via Image tag:', url);
-
-      // Créer une image invisible pour envoyer la requête (comme un lien direct)
-      var img = new Image();
-      img.style.display = 'none';
-      document.body.appendChild(img);
-
-      // Attendre que l'image charge (ou échoue — les deux signifient que la requête est partie)
-      var requestSent = false;
-
-      img.onload = function() {
-        if (!requestSent) {
-          requestSent = true;
-          console.log('Order sent successfully (image loaded)');
-          cleanup();
-          showSuccess();
-        }
-      };
-
-      img.onerror = function() {
-        if (!requestSent) {
-          requestSent = true;
-          console.log('Order sent (image error — but request went through)');
-          cleanup();
-          showSuccess();
-        }
-      };
-
-      // Timeout de secours (3 secondes)
-      setTimeout(function() {
-        if (!requestSent) {
-          requestSent = true;
-          console.log('Order sent (timeout — request probably went through)');
-          cleanup();
-          showSuccess();
-        }
-      }, 3000);
-
-      function cleanup() {
-        if (img.parentNode) img.parentNode.removeChild(img);
-      }
-
-      function showSuccess() {
-        showSuccessModal(orderData.prenom);
-        fName.value = ''; 
-        fAddress.value = ''; 
-        fCity.value = ''; 
-        fPhone.value = '';
-        buyBtn.disabled = false;
-        buyBtn.innerHTML = originalHTML;
-      }
-
-      // Déclencher la requête
-      img.src = url;
+      fetch(url, { method: 'GET', mode: 'no-cors' })
+        .then(function() {
+          showSuccessModal(orderData.prenom);
+          fName.value = ''; fAddress.value = ''; fCity.value = ''; fPhone.value = '';
+        })
+        .catch(function() {
+          showToast('خطأ في الاتصال. يرجى المحاولة مجدداً.', '#ef4444');
+        })
+        .finally(function() {
+          buyBtn.disabled = false;
+          buyBtn.innerHTML = originalHTML;
+        });
     });
   }
 
