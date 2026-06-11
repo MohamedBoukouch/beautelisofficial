@@ -218,9 +218,7 @@
       buyBtn.disabled = true;
       buyBtn.textContent = 'جارٍ المعالجة…';
 
-      // ✅ KEY FIX: Send as GET with URL params
-      // POST with no-cors drops the body — Google Script never receives it.
-      // GET with params in the URL always works with no-cors.
+      // Send as GET with URL params (works with no-cors)
       var params = new URLSearchParams(orderData);
       var url = GOOGLE_SCRIPT_URL + '?' + params.toString();
 
